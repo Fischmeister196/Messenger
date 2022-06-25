@@ -141,24 +141,22 @@ public class Server implements Runnable {
      * @param input
      */
     public synchronized void handle(int id, String input) {
+        String[] messageArray = input.split(":");
+
         for (ServerThread client : threadList) {
 
-            String[] messageArray = input.split(":");
+
             if (messageArray.length <= 2) {
                 if (client.getID() != id) {
                     client.send(id + "(" + messageArray[0] + "): " + messageArray[1]);
-                }
-
-                if (messageArray[0].equals("askName")) {
-                    if (existsName(messageArray[1])) {
-                        sendChat(client, messageArray[1]);
-                    } else {
-                        clientChatList.add(new ClientChat(client.getID(), messageArray[1]));
+                } else {
+                    if (messageArray[0].equals("askName")) {
+                        if (existsName(messageArray[1])) {
+                            sendChat(client, messageArray[1]);
+                        } else {
+                            clientChatList.add(new ClientChat(client.getID(), messageArray[1]));
+                        }
                     }
-                }
-
-                for (ClientChat clientChat : clientChatList) {
-                    clientChat.addMessage(id + "(" + messageArray[0] + "): " + messageArray[1]);
                 }
                 //addMessageToClientChat(messageArray[0], id + "(" + messageArray[0] + "): " + messageArray[1]);
 
@@ -168,12 +166,11 @@ public class Server implements Runnable {
                     if (client.getID() == Integer.parseInt(messageArray[1])) {
                         client.send(id + "(" + messageArray[0] + ":private): " + messageArray[2]);
 
-                        for (ClientChat clientChat : clientChatList) {
-                            if(messageArray[0].equals(clientChat.getName())) {
-                                clientChat.addMessage(id + "(" + messageArray[0] + "): " + messageArray[1]);
+                        for(ClientChat clientChat : clientChatList) {
+                            if(messageArray[1].equals(clientChat.getName())) {
+                                clientChat.addMessage(id + "(" + messageArray[1] + ":private): " + messageArray[2]);
                             }
                         }
-
                         //addMessageToClientChat(messageArray[0], id + "(" + messageArray[0] + ":private): " + messageArray[2]);
                     }
                 } catch (Exception e) {
@@ -181,6 +178,10 @@ public class Server implements Runnable {
                 }
             }
 
+        }
+
+        for (ClientChat clientChat : clientChatList) {
+            clientChat.addMessage(id + "(" + messageArray[0] + "): " + messageArray[1]);
         }
 
         if (input.equalsIgnoreCase("ENDE!")) {
