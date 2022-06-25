@@ -40,6 +40,17 @@ public class ServerThread extends Thread{
 			server.removeThread(ID);
 		}
 	}
+
+	public void askName() {
+		try{
+			streamOutput.writeUTF("askName");
+			streamOutput.flush();
+			System.out.println("Name von Client angefragt: " + ID);
+		}catch(IOException e){
+			e.printStackTrace();
+			server.removeThread(ID);
+		}
+	}
 	
 	public void open() throws IOException{
 		streamInput = new DataInputStream(socket.getInputStream());

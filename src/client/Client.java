@@ -7,7 +7,8 @@ import java.util.Scanner;
 
 
 public class Client implements Runnable{
-	
+
+	private String name;
 	private Socket socket = null;
 	private DataOutputStream outputStream = null;
 	private Scanner input = null;
@@ -15,7 +16,8 @@ public class Client implements Runnable{
 	private ClientThread clientThread = null;
 	private volatile boolean isDone = false;
 	
-	public Client(String ip, int port){
+	public Client(String ip, int port, String name){
+		this.name = name;
 		System.out.println("Verbindung zum Server wird aufgebaut...");
 		try {
 			socket = new Socket(ip, port);
@@ -28,12 +30,22 @@ public class Client implements Runnable{
 		
 	}
 	
-	public void handle(String msg){  
-		if (msg.equals("ENDE!")){
+	public void handle(String message){
+		if (message.equals("ENDE!")){
 			System.out.println("Drücke ENTER zum beenden...");
 			stop();
 		}else{
-			System.out.println(msg);
+			if(message.equals("askName")) {
+				try{
+					outputStream.writeUTF("askName:" + this.getName());
+				}catch(SocketException se){
+					//socket is closed
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+
+			System.out.println(message);
 		}
 	}
 	
@@ -43,7 +55,7 @@ public class Client implements Runnable{
 			String line = null;
 			try{
 				line = input.nextLine();
-				outputStream.writeUTF(line);
+				outputStream.writeUTF(this.getName() + ":" + line);
 			}catch(SocketException se){
 				//socket is closed
 			}catch(Exception e){
@@ -84,18 +96,23 @@ public class Client implements Runnable{
 			e.printStackTrace();
 		}
 	}
+
+	public String getName() {
+		return name;
+	}
 	
 	public static void main(String [] args) throws IOException{
 		Scanner initialInput = new Scanner(System.in);
-
+		System.out.println("Dein Name:");
+		String name = initialInput.nextLine();
 		System.out.println("Server Name:");
 		String host = initialInput.nextLine();
 		System.out.println("Port:");
 		int port = Integer.parseInt(initialInput.nextLine());
 		if(host != null) {
-			Client client = new Client(host, port);
+			Client client = new Client(host, port, name);
 		} else {
-			Client client = new Client("localhost", port);
+			Client client = new Client("localhost", port, name);
 		}
 
 	}
